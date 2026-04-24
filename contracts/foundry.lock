@@ -1,0 +1,29 @@
+{
+  "lib/account-abstraction": {
+    "tag": {
+      "name": "v0.6.0",
+      "rev": "abff2aca61a8f0934e533d0d352978055fddbd96"
+    }
+  },
+  "lib/eas-contracts": {
+    "tag": {
+      "name": "v1.4.0",
+      "rev": "d223e17208aa110dd5ec694d77324a2321d93201"
+    }
+  },
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.0.2",
+      "rev": "dbb6104ce834628e473d2173bbc9d47f81a9eec3"
+    }
+  },
+  "lib/v4-core": {
+    "tag": {
+      "name": "v4.0.0",
+      "rev": "e50237c43811bd9b526eff40f26772152a42daba"
+    }
+  },
+  "lib/v4-periphery": {
+    "rev": "9dafaaecc1e2e1e824eda9d941085f96517d827b"
+  }
+}
