@@ -21,6 +21,9 @@ contract BondVault is Ownable {
     /// @notice The sole verifier permitted to call {slash}.
     address public slashVerifier;
 
+    /// @notice The sole paymaster permitted to call {debitBond}.
+    address public paymaster;
+
     /// @dev Current locked bond per agent account.
     mapping(address account => uint256) public bonds;
 
@@ -31,19 +34,24 @@ contract BondVault is Ownable {
     mapping(address account => bool) public slashed;
 
     event SlashVerifierSet(address indexed verifier);
+    event PaymasterSet(address indexed paymaster);
     event Staked(address indexed agent, address indexed from, uint256 amount);
     event UnstakeRequested(address indexed agent, uint64 requestedAt);
     event Withdrawn(address indexed agent, address indexed to, uint256 amount);
     event AgentSlashed(address indexed agent, uint256 amount, address treasury);
+    event BondDebited(address indexed agent, uint256 amount, address indexed to);
 
     error NotVerifier();
+    error NotPaymaster();
     error NotAgentOwner();
     error AgentIsSlashed();
     error VerifierAlreadySet();
+    error PaymasterAlreadySet();
     error UnstakeAlreadyRequested();
     error UnstakeNotRequested();
     error UnstakeDelayNotElapsed();
     error NothingToWithdraw();
+    error InsufficientBond();
     error ZeroAmount();
     error ZeroAddress();
     error TransferFailed();
@@ -62,6 +70,14 @@ contract BondVault is Ownable {
         if (slashVerifier != address(0)) revert VerifierAlreadySet();
         slashVerifier = verifier;
         emit SlashVerifierSet(verifier);
+    }
+
+    /// @notice Wire the paymaster. Owner-only, one-shot.
+    function setPaymaster(address newPaymaster) external onlyOwner {
+        if (newPaymaster == address(0)) revert ZeroAddress();
+        if (paymaster != address(0)) revert PaymasterAlreadySet();
+        paymaster = newPaymaster;
+        emit PaymasterSet(newPaymaster);
     }
 
     /// @notice Stake ETH on behalf of an agent account.
@@ -124,6 +140,26 @@ contract BondVault is Ownable {
         if (!ok) revert TransferFailed();
 
         emit AgentSlashed(agent, take, treasury);
+    }
+
+    /// @notice Debit a non-permanent amount from an agent's bond. Used by
+    ///         the paymaster to settle unpaid bills. Does NOT mark the agent
+    ///         as slashed.
+    function debitBond(address agent, uint256 amount, address to) external {
+        if (msg.sender != paymaster) revert NotPaymaster();
+        if (slashed[agent]) revert AgentIsSlashed();
+        if (amount == 0) revert ZeroAmount();
+        if (to == address(0)) revert ZeroAddress();
+
+        uint256 bal = bonds[agent];
+        if (amount > bal) revert InsufficientBond();
+
+        bonds[agent] = bal - amount;
+
+        (bool ok, ) = to.call{value: amount}("");
+        if (!ok) revert TransferFailed();
+
+        emit BondDebited(agent, amount, to);
     }
 
     /// @notice Bond balance of an agent.
