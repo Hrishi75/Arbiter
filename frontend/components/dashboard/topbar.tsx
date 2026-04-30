@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 interface TopbarProps {
@@ -37,6 +38,8 @@ export function Topbar({
             ⌘K
           </kbd>
         </div>
+
+        <ThemeToggle />
 
         <Button asChild size="sm" className="text-xs font-medium">
           <Link href={cta.href}>{cta.label}</Link>
