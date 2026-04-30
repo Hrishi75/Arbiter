@@ -1,22 +1,14 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 interface TopbarProps {
   title: string;
   subtitle?: string;
-  cta?: {
-    href: string;
-    label: string;
-  };
+  cta?: { href: string; label: string };
 }
 
-export function Topbar({
-  title,
-  subtitle,
-  cta = { href: "/dashboard/register", label: "+ Register agent" },
-}: TopbarProps) {
+export function Topbar({ title, subtitle, cta }: TopbarProps) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-hairline bg-background px-6">
       <div className="flex items-baseline gap-3">
@@ -39,11 +31,11 @@ export function Topbar({
           </kbd>
         </div>
 
-        <ThemeToggle />
-
-        <Button asChild size="sm" className="text-xs font-medium">
-          <Link href={cta.href}>{cta.label}</Link>
-        </Button>
+        {cta && (
+          <Button asChild size="sm" className="text-xs font-medium">
+            <Link href={cta.href}>{cta.label}</Link>
+          </Button>
+        )}
       </div>
     </header>
   );

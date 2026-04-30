@@ -7,7 +7,11 @@ import { DisputeAlert } from "@/components/dashboard/dispute-alert";
 export default function DashboardPage() {
   return (
     <>
-      <Topbar title="Dashboard" subtitle="operator.eth · Mainnet" />
+      <Topbar
+        title="Dashboard"
+        subtitle="operator.eth · Mainnet"
+        cta={{ href: "/dashboard/register", label: "+ Register agent" }}
+      />
       <main className="px-7 py-6">
         <StatStrip />
         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">

@@ -12,7 +12,7 @@ import {
   Shield,
   ChevronDown,
 } from "lucide-react";
-import { BrandLogo } from "@/components/brand-logo";
+import { ArbiterMark } from "@/components/arbiter-mark";
 import { cn } from "@/lib/utils";
 
 const navOperator = [
@@ -61,17 +61,13 @@ export function SidebarNav() {
 
   return (
     <aside className="fixed inset-y-0 left-0 flex w-[220px] flex-col border-r border-hairline bg-sidebar">
-      <Link href="/" className="flex h-16 items-center gap-3 border-b border-hairline px-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-hairline-strong bg-background/80 text-foreground shadow-[0_8px_24px_rgba(20,18,16,0.08)]">
-          <BrandLogo size={24} />
-        </div>
-        <div className="min-w-0">
-          <div className="font-mono text-sm tracking-[0.18em] text-foreground">ARBITER</div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Operator Console
-          </div>
-        </div>
-      </Link>
+      <div className="flex h-14 items-center gap-2 border-b border-hairline px-4">
+        <ArbiterMark size={20} />
+        <span className="font-mono text-sm tracking-wide">arbiter</span>
+        <span className="ml-auto font-mono text-[10px] tracking-[0.12em] text-muted-foreground">
+          v1.0
+        </span>
+      </div>
 
       <div className="px-4 pt-6 pb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
         Operator
