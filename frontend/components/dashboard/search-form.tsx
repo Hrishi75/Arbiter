@@ -13,7 +13,7 @@ export function DashboardSearchForm({
   action,
   defaultValue,
   placeholder = "Search agents, tx, attestations",
-  widthClassName = "w-[280px]",
+  widthClassName = "w-[280px] max-w-full",
   params,
 }: DashboardSearchFormProps) {
   return (
@@ -29,9 +29,9 @@ export function DashboardSearchForm({
           defaultValue={defaultValue}
           placeholder={placeholder}
           aria-label={placeholder}
-          className={`${widthClassName} border border-hairline bg-card py-1.5 pl-9 pr-14 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring`}
+          className={`${widthClassName} h-10 rounded-full border border-hairline-strong bg-background/80 py-1.5 pl-10 pr-14 text-sm shadow-[0_10px_24px_rgba(20,18,16,0.06)] backdrop-blur-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 dark:shadow-[0_12px_28px_rgba(0,0,0,0.22)]`}
         />
-        <kbd className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[10px] text-muted-foreground">
+        <kbd className="absolute right-4 top-1/2 hidden -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground sm:block">
           Enter
         </kbd>
       </form>
