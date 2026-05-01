@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Sparkline } from "@/components/dashboard/sparkline";
 import { StatusChip } from "@/components/dashboard/status-chip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { disputes, rewardTrend, sparklineDays } from "@/lib/dashboard-data";
 
 type Tone = "ok" | "warn" | "bad" | "muted";
 
@@ -14,22 +16,12 @@ const stats = [
   { label: "Keeper rank", value: "#12", delta: "of 847", tone: "muted" as const },
 ];
 
-const disputes = [
-  { id: "DSP-0094", agent: "hedger", reason: "slippage", severity: "HIGH", window: "47h 12m", reward: "+0.05 ETH" },
-  { id: "DSP-0093", agent: "node-12", reason: "timeout", severity: "HIGH", window: "22h 04m", reward: "+0.03 ETH" },
-  { id: "DSP-0092", agent: "trader-11", reason: "oracle", severity: "MED", window: "08h 41m", reward: "+0.02 ETH" },
-  { id: "DSP-0091", agent: "hedger-03", reason: "slippage", severity: "MED", window: "03h 12m", reward: "+0.04 ETH" },
-];
-
 const components = [
   { name: "EAS signer", status: "operational", tone: "ok" as Tone },
   { name: "RPC endpoint", status: "142ms avg", tone: "ok" as Tone },
   { name: "KeeperHub relay", status: "operational", tone: "ok" as Tone },
   { name: "Slashing bot", status: "standby", tone: "warn" as Tone },
 ];
-
-const rewardTrend = [0.18, 0.22, 0.16, 0.21, 0.28, 0.31, 0.34];
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const toneBg: Record<Tone, string> = {
   ok: "bg-ok",
@@ -54,46 +46,35 @@ export default function KeeperConsolePage() {
       <Topbar
         title="Keeper console"
         subtitle="keeper-7x · operational"
-        cta={{ href: "#", label: "Claim next" }}
+        cta={{ href: "/dashboard/disputes?severity=high", label: "Open disputes" }}
       />
 
       <main className="px-7 py-6">
-        {/* Stat strip — 5 cells */}
         <div className="grid grid-cols-5 border border-hairline bg-card">
-          {stats.map((s, i) => (
+          {stats.map((stat, i) => (
             <div
-              key={s.label}
-              className={cn(
-                "p-5",
-                i < stats.length - 1 && "border-r border-hairline"
-              )}
+              key={stat.label}
+              className={cn("p-5", i < stats.length - 1 && "border-r border-hairline")}
             >
               <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                {s.label}
+                {stat.label}
               </div>
               <div className="mt-2 text-2xl font-medium tracking-tight">
-                {s.value}
+                {stat.value}
               </div>
-              <div
-                className={cn(
-                  "mt-1 font-mono text-[10px]",
-                  toneText[s.tone]
-                )}
-              >
-                {s.delta}
+              <div className={cn("mt-1 font-mono text-[10px]", toneText[stat.tone])}>
+                {stat.delta}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Two-column grid */}
         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
-          {/* Dispute resolution queue */}
           <div className="border border-hairline bg-card">
             <ul>
-              {disputes.map((d, i) => (
+              {disputes.map((dispute, i) => (
                 <li
-                  key={d.id}
+                  key={dispute.id}
                   className={cn(
                     "grid items-center px-5 py-4",
                     DISPUTE_COLS,
@@ -101,53 +82,56 @@ export default function KeeperConsolePage() {
                   )}
                 >
                   <span className="font-mono text-xs text-muted-foreground">
-                    {d.id}
+                    {dispute.id}
                   </span>
                   <span className="font-mono text-xs">
-                    <span className="text-foreground">{d.agent}</span>
+                    <span className="text-foreground">{dispute.agentName}</span>
                     <span className="mx-1.5 text-muted-foreground">·</span>
-                    <span className="text-muted-foreground">{d.reason}</span>
+                    <span className="text-muted-foreground">{dispute.reason}</span>
                   </span>
-                  <StatusChip tone={d.severity === "HIGH" ? "bad" : "warn"}>
-                    {d.severity}
+                  <StatusChip tone={dispute.severity === "high" ? "bad" : "warn"}>
+                    {dispute.severity.toUpperCase()}
                   </StatusChip>
                   <span className="font-mono text-xs text-muted-foreground">
-                    window {d.window}
+                    window {dispute.remainingWindow}
                   </span>
-                  <span className="font-mono text-xs text-ok">{d.reward}</span>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Resolve
+                  <span className="font-mono text-xs text-ok">
+                    +{dispute.rewardEth.toFixed(2)} ETH
+                  </span>
+                  <Button variant="outline" size="sm" className="text-xs" asChild>
+                    <Link
+                      href={`/dashboard/agent/${encodeURIComponent(dispute.agentAddress)}`}
+                    >
+                      Resolve
+                    </Link>
                   </Button>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Side: System status + Rewards chart */}
           <div className="flex flex-col gap-5">
-            {/* System status */}
             <div className="border border-hairline bg-card p-5">
               <ul className="flex flex-col gap-3">
-                {components.map((c) => (
+                {components.map((component) => (
                   <li
-                    key={c.name}
+                    key={component.name}
                     className="flex items-center justify-between"
                   >
                     <span className="flex items-center gap-2">
                       <span
-                        className={cn("h-1.5 w-1.5 rounded-full", toneBg[c.tone])}
+                        className={cn("h-1.5 w-1.5 rounded-full", toneBg[component.tone])}
                       />
-                      <span className="text-sm">{c.name}</span>
+                      <span className="text-sm">{component.name}</span>
                     </span>
                     <span className="font-mono text-[10px] text-muted-foreground">
-                      {c.status}
+                      {component.status}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Rewards chart */}
             <div className="border border-hairline bg-card p-5">
               <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                 Rewards · 7d
@@ -156,8 +140,8 @@ export default function KeeperConsolePage() {
                 <Sparkline values={rewardTrend} width={240} height={60} />
               </div>
               <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground">
-                {days.map((d) => (
-                  <span key={d}>{d}</span>
+                {sparklineDays.map((day) => (
+                  <span key={day}>{day}</span>
                 ))}
               </div>
             </div>
