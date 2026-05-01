@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   title: "Arbiter — On-chain accountability for AI agents",
   description:
     "Every agent posts a bond. Every action is attested. Misbehaviour is slashed automatically.",
+  icons: {
+    icon: "/logo-white.svg",
+    shortcut: "/logo-white.svg",
+    apple: "/logo-white.svg",
+  },
 };
 
 export default function RootLayout({
