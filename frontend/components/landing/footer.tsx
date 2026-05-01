@@ -31,11 +31,18 @@ export function Footer() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <Link
+                href="/dashboard"
+                className={cn(buttonVariants({ size: "sm" }), "landing-button rounded-full bg-accent text-accent-foreground hover:bg-accent/90")}
+              >
+                Get Started
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
               <a
                 href="https://github.com/Hrishi75/Arbiter"
                 target="_blank"
                 rel="noreferrer"
-                className={cn(buttonVariants({ size: "sm" }), "landing-button rounded-full bg-accent text-accent-foreground hover:bg-accent/90")}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "landing-button-outline rounded-full")}
               >
                 GitHub
                 <ArrowUpRight className="h-3.5 w-3.5" />

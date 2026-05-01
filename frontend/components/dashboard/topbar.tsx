@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DashboardSearchForm } from "@/components/dashboard/search-form";
 
 interface TopbarProps {
   title: string;
   subtitle?: string;
   cta?: { href: string; label: string };
+  search?: {
+    action: string;
+    value?: string;
+    placeholder?: string;
+    params?: Record<string, string | undefined>;
+  };
 }
 
-export function Topbar({ title, subtitle, cta }: TopbarProps) {
+export function Topbar({ title, subtitle, cta, search }: TopbarProps) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-hairline bg-background px-6">
       <div className="flex items-baseline gap-3">
@@ -19,17 +25,14 @@ export function Topbar({ title, subtitle, cta }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Search agents, tx, attestations"
-            className="w-[280px] border border-hairline bg-card py-1.5 pl-9 pr-12 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        {search ? (
+          <DashboardSearchForm
+            action={search.action}
+            defaultValue={search.value}
+            placeholder={search.placeholder}
+            params={search.params}
           />
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[10px] text-muted-foreground">
-            ⌘K
-          </kbd>
-        </div>
+        ) : null}
 
         {cta && (
           <Button asChild size="sm" className="text-xs font-medium">

@@ -63,21 +63,30 @@ export function Hero() {
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
-              href="#protocol"
+              href="/dashboard"
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "landing-button rounded-full bg-accent px-5 text-accent-foreground hover:bg-accent/90"
               )}
             >
-              Explore protocol
+              Get Started
               <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="#protocol"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "landing-button-outline rounded-full px-5"
+              )}
+            >
+              Explore protocol
             </Link>
             <a
               href="https://github.com/Hrishi75/Arbiter"
               target="_blank"
               rel="noreferrer"
               className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
+                buttonVariants({ variant: "ghost", size: "lg" }),
                 "landing-button-outline rounded-full px-5"
               )}
             >

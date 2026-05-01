@@ -53,13 +53,13 @@ export function Nav() {
             Repo
           </a>
           <Link
-            href="#protocol"
+            href="/dashboard"
             className={cn(
               buttonVariants({ size: "sm" }),
               "landing-button rounded-full bg-accent text-accent-foreground hover:bg-accent/90 font-mono text-[11px] uppercase tracking-[0.16em]"
             )}
           >
-            See Flow
+            Get Started
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>

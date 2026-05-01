@@ -2,12 +2,12 @@ import { cn } from "@/lib/utils";
 
 type Tone = "ok" | "bad" | "muted";
 
-const stats: { label: string; value: string; delta: string; tone: Tone }[] = [
-  { label: "Active agents", value: "4", delta: "of 4", tone: "muted" },
-  { label: "Total bonded", value: "8.50 ETH", delta: "+0.5 24h", tone: "ok" },
-  { label: "Executions · 24h", value: "1,412", delta: "+8.1%", tone: "ok" },
-  { label: "Disputes open", value: "1", delta: "47h 12m", tone: "bad" },
-];
+interface StatItem {
+  label: string;
+  value: string;
+  delta: string;
+  tone: Tone;
+}
 
 const toneClass: Record<Tone, string> = {
   ok: "text-ok",
@@ -15,7 +15,7 @@ const toneClass: Record<Tone, string> = {
   muted: "text-muted-foreground",
 };
 
-export function StatStrip() {
+export function StatStrip({ stats }: { stats: StatItem[] }) {
   return (
     <div className="grid grid-cols-4 border border-hairline bg-card">
       {stats.map((s, i) => (

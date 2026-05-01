@@ -13,26 +13,66 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { ArbiterMark } from "@/components/arbiter-mark";
+import { dashboardAgents, disputes } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 
-const navOperator = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
-  { href: "/dashboard/agents", label: "Agents", icon: GripHorizontal, badge: "4" },
-  { href: "/dashboard/disputes", label: "Disputes", icon: AlertTriangle, badge: "1" },
-  { href: "/dashboard/register", label: "Register agent", icon: Plus },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  matchPrefixes: string[];
+  badge?: string;
+  live?: boolean;
+};
+
+const navOperator: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, matchPrefixes: ["/dashboard"] },
+  {
+    href: "/dashboard/agents",
+    label: "Agents",
+    icon: GripHorizontal,
+    badge: String(dashboardAgents.length),
+    matchPrefixes: ["/dashboard/agents", "/dashboard/agent"],
+  },
+  {
+    href: "/dashboard/disputes",
+    label: "Disputes",
+    icon: AlertTriangle,
+    badge: String(disputes.filter((dispute) => dispute.status === "open").length),
+    matchPrefixes: ["/dashboard/disputes"],
+  },
+  {
+    href: "/dashboard/register",
+    label: "Register agent",
+    icon: Plus,
+    matchPrefixes: ["/dashboard/register"],
+  },
 ];
 
-const navNetwork = [
-  { href: "/dashboard/feed", label: "Execution feed", icon: Activity, live: true },
-  { href: "/dashboard/keeper", label: "Keeper console", icon: Shield },
+const navNetwork: NavItem[] = [
+  {
+    href: "/dashboard/feed",
+    label: "Execution feed",
+    icon: Activity,
+    live: true,
+    matchPrefixes: ["/dashboard/feed"],
+  },
+  {
+    href: "/dashboard/keeper",
+    label: "Keeper console",
+    icon: Shield,
+    matchPrefixes: ["/dashboard/keeper"],
+  },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
 
-  const renderItem = (item: (typeof navOperator)[number] & { live?: boolean }) => {
+  const renderItem = (item: NavItem) => {
     const Icon = item.icon;
-    const active = pathname === item.href;
+    const active = item.href === "/dashboard"
+      ? pathname === item.href
+      : item.matchPrefixes.some((prefix) => pathname.startsWith(prefix));
     return (
       <Link
         key={item.href}

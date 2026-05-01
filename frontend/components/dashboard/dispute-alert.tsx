@@ -1,7 +1,21 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import { type DisputeRecord } from "@/lib/dashboard-data";
 
-export function DisputeAlert() {
+export function DisputeAlert({ dispute }: { dispute: DisputeRecord | null }) {
+  if (!dispute) {
+    return (
+      <div className="border border-hairline bg-card px-5 py-4">
+        <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ok">
+          No open disputes
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          All registered agents are currently inside policy.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <Link
       href="/dashboard/disputes"
@@ -13,14 +27,14 @@ export function DisputeAlert() {
           Dispute open
         </span>
         <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-          47h 12m
+          {dispute.remainingWindow}
         </span>
       </div>
       <h3 className="mt-2 text-sm font-medium">
-        hedger · execution 0x3f6...bd81
+        {dispute.agentName} · {dispute.id}
       </h3>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        Keeper reported slippage beyond declared tolerance. Respond or auto-slash.
+        {dispute.summary}
       </p>
     </Link>
   );
