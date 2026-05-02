@@ -1,47 +1,55 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { StatusChip } from "@/components/dashboard/status-chip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useDisputes } from "@/lib/hooks/useDisputes";
 import {
+  type DisputeStatus,
+  disputeId,
   filterDisputes,
+  formatEth,
   readSearchParam,
+  remainingWindow,
   shortenHex,
 } from "@/lib/dashboard-data";
 
-const severityTone = {
-  high: "bad",
-  medium: "warn",
-} as const;
+const statusTone: Record<DisputeStatus, "ok" | "warn" | "bad" | "muted"> = {
+  open: "warn",
+  disputed: "bad",
+  executed: "muted",
+};
 
-const severityFilters = [
-  { href: "/dashboard/disputes", label: "All severities", value: "all" },
-  { href: "/dashboard/disputes?severity=high", label: "High only", value: "high" },
-  { href: "/dashboard/disputes?severity=medium", label: "Medium only", value: "medium" },
+const statusFilters = [
+  { href: "/dashboard/disputes", label: "All", value: "all" },
+  { href: "/dashboard/disputes?status=open", label: "Open", value: "open" },
+  { href: "/dashboard/disputes?status=disputed", label: "Disputed", value: "disputed" },
+  { href: "/dashboard/disputes?status=executed", label: "Executed", value: "executed" },
 ];
 
-export default function DisputesPage({
-  searchParams,
-}: {
-  searchParams?: { q?: string | string[]; severity?: string | string[] };
-}) {
-  const query = readSearchParam(searchParams?.q);
-  const severity = readSearchParam(searchParams?.severity);
-  const filteredDisputes = filterDisputes(query, { severity });
+export default function DisputesPage() {
+  const searchParams = useSearchParams();
+  const query = readSearchParam(searchParams.get("q"));
+  const status = readSearchParam(searchParams.get("status"));
+
+  const { data: allDisputes = [] } = useDisputes();
+  const disputes = filterDisputes(allDisputes, query, { status });
 
   return (
     <>
       <Topbar
         title="Disputes"
-        subtitle={`${filteredDisputes.length} cases in queue`}
-        search={{ action: "/dashboard/disputes", value: query, params: { severity } }}
+        subtitle={`${disputes.length} cases in queue`}
+        search={{ action: "/dashboard/disputes", value: query, params: { status } }}
       />
-
       <main className="px-7 py-6">
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          {severityFilters.map((filter) => {
-            const active = (severity || "all") === filter.value;
+          {statusFilters.map((filter) => {
+            const active = (status || "all") === filter.value;
             return (
               <Link
                 key={filter.value}
@@ -60,50 +68,37 @@ export default function DisputesPage({
         </div>
 
         <div className="border border-hairline bg-card">
-          {filteredDisputes.length ? (
-            filteredDisputes.map((dispute, index) => (
+          {disputes.length ? (
+            disputes.map((d, index) => (
               <div
-                key={dispute.id}
+                key={d.reportId}
                 className={cn(
                   "flex items-start justify-between gap-5 px-5 py-4",
-                  index < filteredDisputes.length - 1 && "border-b border-hairline"
+                  index < disputes.length - 1 && "border-b border-hairline"
                 )}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="font-mono text-xs text-muted-foreground">
-                      {dispute.id}
+                      {disputeId(d.reportId)}
                     </span>
-                    <StatusChip tone={severityTone[dispute.severity]}>
-                      {dispute.severity}
-                    </StatusChip>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                      {dispute.status}
-                    </span>
+                    <StatusChip tone={statusTone[d.status]}>{d.status}</StatusChip>
                   </div>
                   <h2 className="mt-2 text-sm font-medium">
-                    {dispute.agentName} · {dispute.reason}
+                    {shortenHex(d.agent)} · {d.reason}
                   </h2>
                   <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
-                    {dispute.summary}
+                    Evidence: {d.evidenceURI || "—"}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
-                    <span>{shortenHex(dispute.agentAddress)}</span>
-                    <span>window {dispute.remainingWindow}</span>
-                    <span>reward +{dispute.rewardEth.toFixed(2)} ETH</span>
+                    <span>reporter {shortenHex(d.reporter)}</span>
+                    <span>window {remainingWindow(d.deadline)}</span>
+                    <span>amount {formatEth(d.amountWei, 4)} ETH</span>
                   </div>
                 </div>
-
                 <div className="flex shrink-0 items-center gap-2">
-                  <Button variant="outline" size="sm" asChild className="text-xs">
-                    <Link href={`/dashboard/feed?q=${encodeURIComponent(dispute.executionRef)}`}>
-                      Inspect event
-                    </Link>
-                  </Button>
                   <Button size="sm" asChild className="text-xs">
-                    <Link
-                      href={`/dashboard/agent/${encodeURIComponent(dispute.agentAddress)}`}
-                    >
+                    <Link href={`/dashboard/agent/${encodeURIComponent(d.agent)}`}>
                       Open agent
                     </Link>
                   </Button>

@@ -1,33 +1,31 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
 import { Topbar } from "@/components/dashboard/topbar";
 import { StatStrip } from "@/components/dashboard/stat-strip";
 import { AgentsTable } from "@/components/dashboard/agents-table";
 import { BondedCard } from "@/components/dashboard/bonded-card";
 import { DisputeAlert } from "@/components/dashboard/dispute-alert";
-import {
-  bondedTrend,
-  dashboardAgents,
-  disputes,
-  filterAgents,
-  getDashboardStats,
-  readSearchParam,
-  sparklineDays,
-} from "@/lib/dashboard-data";
+import { useAgents } from "@/lib/hooks/useAgents";
+import { useDisputes } from "@/lib/hooks/useDisputes";
+import { useDashboardStats } from "@/lib/hooks/useDashboardStats";
+import { filterAgents, formatEth, readSearchParam } from "@/lib/dashboard-data";
 
-export default function DashboardPage({
-  searchParams,
-}: {
-  searchParams?: { q?: string | string[] };
-}) {
-  const query = readSearchParam(searchParams?.q);
-  const agents = filterAgents(query);
-  const stats = getDashboardStats(agents);
-  const featuredDispute = disputes.find((dispute) => dispute.status === "open") ?? null;
+export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const query = readSearchParam(searchParams.get("q"));
+
+  const { data: allAgents = [] } = useAgents();
+  const { data: disputes = [] } = useDisputes();
+  const stats = useDashboardStats();
+
+  const agents = filterAgents(allAgents, query);
+  const featuredDispute = disputes.find((d) => d.status === "open") ?? null;
 
   return (
     <>
       <Topbar
         title="Dashboard"
-        subtitle="operator.eth · Mainnet"
         cta={{ href: "/dashboard/register", label: "+ Register agent" }}
         search={{ action: "/dashboard", value: query }}
       />
@@ -42,40 +40,40 @@ export default function DashboardPage({
             },
             {
               label: "Total bonded",
-              value: `${stats.totalBonded.toFixed(2)} ETH`,
-              delta: "+0.50 24h",
-              tone: "ok",
+              value: `${formatEth(stats.totalBondedWei, 2)} ETH`,
+              delta: "—",
+              tone: "muted",
             },
             {
               label: "Executions · 24h",
-              value: stats.totalExecutions24h.toLocaleString(),
-              delta: "+8.1%",
-              tone: "ok",
+              value: stats.totalExecutions24h?.toLocaleString() ?? "—",
+              delta: "needs indexer",
+              tone: "muted",
             },
             {
               label: "Disputes open",
               value: String(stats.openDisputes),
-              delta: featuredDispute?.remainingWindow ?? "all clear",
+              delta: featuredDispute ? "review pending" : "all clear",
               tone: stats.openDisputes ? "bad" : "muted",
             },
           ]}
         />
         {query ? (
           <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Showing {agents.length} of {dashboardAgents.length} agents for "{query}"
+            Showing {agents.length} of {allAgents.length} agents for &quot;{query}&quot;
           </p>
         ) : null}
         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
           <AgentsTable
             agents={agents}
-            subtitle="Search filters the table while keeping every dashboard route in sync."
+            subtitle="Live from chain. Refreshes every 12s."
           />
           <div className="flex flex-col gap-5">
             <BondedCard
-              totalBonded={stats.totalBonded}
-              delta="+0.50"
-              values={bondedTrend}
-              days={sparklineDays}
+              totalBonded={Number(formatEth(stats.totalBondedWei, 4))}
+              delta="—"
+              values={[]}
+              days={[]}
             />
             <DisputeAlert dispute={featuredDispute} />
           </div>

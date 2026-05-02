@@ -1,19 +1,12 @@
 import Link from "next/link";
-import { ReputationBar } from "@/components/dashboard/reputation-bar";
 import { StatusChip } from "@/components/dashboard/status-chip";
-import { type AgentRecord, shortenHex } from "@/lib/dashboard-data";
+import { type Agent, formatEth, shortenHex } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 
-const COLS = "grid-cols-[1.4fr_1fr_0.9fr_0.5fr_0.7fr_0.5fr]";
-
-const deltaToneClass: Record<AgentRecord["status"]["tone"], string> = {
-  ok: "text-ok",
-  warn: "text-warn",
-  bad: "text-muted-foreground",
-};
+const COLS = "grid-cols-[1.6fr_1fr_1fr_0.8fr]";
 
 interface AgentsTableProps {
-  agents: AgentRecord[];
+  agents: Agent[];
   title?: string;
   subtitle?: string;
   emptyMessage?: string;
@@ -23,8 +16,10 @@ export function AgentsTable({
   agents,
   title = "Agents",
   subtitle,
-  emptyMessage = "No agents match the current search.",
+  emptyMessage = "No agents registered yet.",
 }: AgentsTableProps) {
+  const activeCount = agents.filter((a) => a.active).length;
+
   return (
     <div className="border border-hairline bg-card">
       <header className="flex items-center justify-between border-b border-hairline px-5 py-3">
@@ -36,7 +31,7 @@ export function AgentsTable({
         </div>
         <div className="flex items-center gap-3">
           <span className="bg-muted px-2 py-0.5 font-mono text-[10px] tracking-[0.04em] text-muted-foreground">
-            {agents.filter((agent) => agent.status.tone === "ok").length} active
+            {activeCount} active
           </span>
           <Link
             href="/dashboard/agents"
@@ -47,13 +42,8 @@ export function AgentsTable({
         </div>
       </header>
 
-      <div
-        className={cn(
-          "grid border-b border-hairline bg-muted/40 px-5 py-2.5",
-          COLS
-        )}
-      >
-        {["Agent", "Bond", "Reputation", "24h", "Total exec", ""].map((h) => (
+      <div className={cn("grid border-b border-hairline bg-muted/40 px-5 py-2.5", COLS)}>
+        {["Agent", "Bond", "Owner", ""].map((h) => (
           <div
             key={h}
             className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-muted-foreground"
@@ -66,8 +56,8 @@ export function AgentsTable({
       {agents.length ? (
         agents.map((agent, i) => (
           <Link
-            key={agent.address}
-            href={`/dashboard/agent/${encodeURIComponent(agent.address)}`}
+            key={agent.account}
+            href={`/dashboard/agent/${encodeURIComponent(agent.account)}`}
             className={cn(
               "grid items-center px-5 py-3.5 transition-colors hover:bg-muted/30",
               COLS,
@@ -75,26 +65,18 @@ export function AgentsTable({
             )}
           >
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{agent.name}</span>
+              <span className="text-sm font-medium">{agent.metadataURI || shortenHex(agent.account)}</span>
               <span className="font-mono text-[10px] text-muted-foreground">
-                {shortenHex(agent.address)}
+                {shortenHex(agent.account)}
               </span>
             </div>
-            <div className="font-mono text-xs">{agent.bondEth.toFixed(2)} ETH</div>
-            <div className="flex items-center gap-2.5">
-              <ReputationBar score={agent.reputation} tone={agent.status.tone} />
-              <span className="font-mono text-xs">{agent.reputation.toFixed(2)}</span>
-            </div>
-            <div className={cn("font-mono text-xs", deltaToneClass[agent.status.tone])}>
-              {agent.delta24h}
-            </div>
-            <div className="font-mono text-xs">
-              {agent.totalExecutions.toLocaleString()}
+            <div className="font-mono text-xs">{formatEth(agent.bondWei, 2)} ETH</div>
+            <div className="font-mono text-xs text-muted-foreground">
+              {shortenHex(agent.owner)}
             </div>
             <div className="flex justify-end">
-              <StatusChip tone={agent.status.tone}>
-                <span className="text-[10px]">{agent.status.mark}</span>
-                {agent.status.label}
+              <StatusChip tone={agent.active ? "ok" : "muted"}>
+                {agent.active ? "active" : "inactive"}
               </StatusChip>
             </div>
           </Link>

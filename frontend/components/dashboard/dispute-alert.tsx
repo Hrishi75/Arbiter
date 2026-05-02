@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
-import { type DisputeRecord } from "@/lib/dashboard-data";
+import { type Dispute, disputeId, formatEth, remainingWindow, shortenHex } from "@/lib/dashboard-data";
 
-export function DisputeAlert({ dispute }: { dispute: DisputeRecord | null }) {
+export function DisputeAlert({ dispute }: { dispute: Dispute | null }) {
   if (!dispute) {
     return (
       <div className="border border-hairline bg-card px-5 py-4">
@@ -27,14 +27,14 @@ export function DisputeAlert({ dispute }: { dispute: DisputeRecord | null }) {
           Dispute open
         </span>
         <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-          {dispute.remainingWindow}
+          {remainingWindow(dispute.deadline)}
         </span>
       </div>
       <h3 className="mt-2 text-sm font-medium">
-        {dispute.agentName} · {dispute.id}
+        {shortenHex(dispute.agent)} · {disputeId(dispute.reportId)}
       </h3>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        {dispute.summary}
+        {dispute.reason} · {formatEth(dispute.amountWei, 4)} ETH at risk
       </p>
     </Link>
   );
