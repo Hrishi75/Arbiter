@@ -12,8 +12,13 @@ import {
   Shield,
   Settings,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BrandLogo } from "@/components/brand-logo";
+import { useAgents } from "@/lib/hooks/useAgents";
+import { useDisputes } from "@/lib/hooks/useDisputes";
+import { shortenHex } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -21,70 +26,85 @@ type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   matchPrefixes: string[];
-  badge?: string;
+  badge?: string | number;
   live?: boolean;
 };
 
-const navOperator: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, matchPrefixes: ["/dashboard"] },
-  {
-    href: "/dashboard/agents",
-    label: "Agents",
-    icon: GripHorizontal,
-    badge: "4",
-    matchPrefixes: ["/dashboard/agents", "/dashboard/agent"],
-  },
-  {
-    href: "/dashboard/disputes",
-    label: "Disputes",
-    icon: AlertTriangle,
-    badge: "1",
-    matchPrefixes: ["/dashboard/disputes"],
-  },
-  {
-    href: "/dashboard/register",
-    label: "Register agent",
-    icon: Plus,
-    matchPrefixes: ["/dashboard/register"],
-  },
-];
-
-const navNetwork: NavItem[] = [
-  {
-    href: "/dashboard/feed",
-    label: "Execution feed",
-    icon: Activity,
-    live: true,
-    matchPrefixes: ["/dashboard/feed"],
-  },
-  {
-    href: "/dashboard/keeper",
-    label: "Keeper console",
-    icon: Shield,
-    matchPrefixes: ["/dashboard/keeper"],
-  },
-];
-
-const navAccount: NavItem[] = [
-  {
-    href: "/dashboard/settings",
-    label: "Settings",
-    icon: Settings,
-    matchPrefixes: ["/dashboard/settings"],
-  },
-];
+function buildNav(agentCount: number, openDisputeCount: number): {
+  operator: NavItem[];
+  network: NavItem[];
+  account: NavItem[];
+} {
+  return {
+    operator: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, matchPrefixes: ["/dashboard"] },
+      {
+        href: "/dashboard/agents",
+        label: "Agents",
+        icon: GripHorizontal,
+        badge: agentCount > 0 ? agentCount : undefined,
+        matchPrefixes: ["/dashboard/agents", "/dashboard/agent"],
+      },
+      {
+        href: "/dashboard/disputes",
+        label: "Disputes",
+        icon: AlertTriangle,
+        badge: openDisputeCount > 0 ? openDisputeCount : undefined,
+        matchPrefixes: ["/dashboard/disputes"],
+      },
+      {
+        href: "/dashboard/register",
+        label: "Register agent",
+        icon: Plus,
+        matchPrefixes: ["/dashboard/register"],
+      },
+    ],
+    network: [
+      {
+        href: "/dashboard/feed",
+        label: "Execution feed",
+        icon: Activity,
+        live: true,
+        matchPrefixes: ["/dashboard/feed"],
+      },
+      {
+        href: "/dashboard/keeper",
+        label: "Keeper console",
+        icon: Shield,
+        matchPrefixes: ["/dashboard/keeper"],
+      },
+    ],
+    account: [
+      {
+        href: "/dashboard/settings",
+        label: "Settings",
+        icon: Settings,
+        matchPrefixes: ["/dashboard/settings"],
+      },
+    ],
+  };
+}
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const accountActive = navAccount.some((item) =>
+  const { data: agents } = useAgents();
+  const { data: disputes } = useDisputes();
+
+  const agentCount = agents?.length ?? 0;
+  const openDisputeCount = disputes?.filter((d) => d.status === "open").length ?? 0;
+
+  const nav = React.useMemo(
+    () => buildNav(agentCount, openDisputeCount),
+    [agentCount, openDisputeCount]
+  );
+
+  const accountActive = nav.account.some((item) =>
     item.matchPrefixes.some((prefix) => pathname.startsWith(prefix))
   );
   const [accountOpen, setAccountOpen] = React.useState(accountActive);
 
   React.useEffect(() => {
-    if (accountActive) {
-      setAccountOpen(true);
-    }
+    if (accountActive) setAccountOpen(true);
   }, [accountActive]);
 
   const renderItem = (item: NavItem) => {
@@ -110,7 +130,7 @@ export function SidebarNav() {
         )}
         <Icon className="h-3.5 w-3.5" />
         <span>{item.label}</span>
-        {item.badge && (
+        {item.badge !== undefined && (
           <span className="ml-auto font-mono text-[10px] text-muted-foreground">
             {item.badge}
           </span>
@@ -147,12 +167,12 @@ export function SidebarNav() {
       <div className="px-4 pt-5 pb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
         Operator
       </div>
-      <nav className="px-3 flex flex-col gap-1">{navOperator.map(renderItem)}</nav>
+      <nav className="px-3 flex flex-col gap-1">{nav.operator.map(renderItem)}</nav>
 
       <div className="px-4 pt-6 pb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
         Network
       </div>
-      <nav className="px-3 flex flex-col gap-1">{navNetwork.map(renderItem)}</nav>
+      <nav className="px-3 flex flex-col gap-1">{nav.network.map(renderItem)}</nav>
 
       <div className="mt-auto border-t border-hairline p-3">
         {accountOpen ? (
@@ -160,30 +180,74 @@ export function SidebarNav() {
             <div className="px-1 pb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
               Account
             </div>
-            <nav className="flex flex-col gap-1">{navAccount.map(renderItem)}</nav>
+            <nav className="flex flex-col gap-1">{nav.account.map(renderItem)}</nav>
           </div>
         ) : null}
 
-        <button
-          type="button"
-          aria-expanded={accountOpen}
-          onClick={() => setAccountOpen((open) => !open)}
-          className="flex w-full items-center gap-3 rounded-[22px] border border-hairline bg-background/68 px-4 py-3 text-left shadow-[0_12px_24px_rgba(20,18,16,0.05)] transition-colors hover:bg-background dark:shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
-        >
-          <span className="h-9 w-9 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-700 to-amber-900 shadow-inner" />
-          <span className="flex min-w-0 flex-col items-start">
-            <span className="truncate text-xs font-medium">operator.eth</span>
-            <span className="truncate font-mono text-[10px] text-muted-foreground">
-              0xa2b...7ef3
-            </span>
-          </span>
-          <ChevronDown
-            className={cn(
-              "ml-auto h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform",
-              accountOpen && "rotate-180"
-            )}
-          />
-        </button>
+        <ConnectButton.Custom>
+          {({ account, chain, mounted, openAccountModal, openConnectModal }) => {
+            const ready = mounted;
+            const connected = ready && !!account && !!chain;
+
+            if (!connected) {
+              return (
+                <button
+                  type="button"
+                  onClick={openConnectModal}
+                  className="flex w-full items-center gap-3 rounded-[22px] border border-hairline bg-background/68 px-4 py-3 text-left shadow-[0_12px_24px_rgba(20,18,16,0.05)] transition-colors hover:bg-background dark:shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
+                >
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-700 to-amber-900 shadow-inner">
+                    <Wallet className="h-4 w-4 text-background" />
+                  </span>
+                  <span className="flex min-w-0 flex-col items-start">
+                    <span className="truncate text-xs font-medium">Connect wallet</span>
+                    <span className="truncate font-mono text-[10px] text-muted-foreground">
+                      not connected
+                    </span>
+                  </span>
+                </button>
+              );
+            }
+
+            return (
+              <button
+                type="button"
+                aria-expanded={accountOpen}
+                onClick={(e) => {
+                  // Click on chevron toggles section; click on chip opens modal.
+                  const target = e.target as HTMLElement;
+                  if (target.closest("[data-toggle='account']")) {
+                    setAccountOpen((open) => !open);
+                  } else {
+                    openAccountModal();
+                  }
+                }}
+                className="flex w-full items-center gap-3 rounded-[22px] border border-hairline bg-background/68 px-4 py-3 text-left shadow-[0_12px_24px_rgba(20,18,16,0.05)] transition-colors hover:bg-background dark:shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
+              >
+                <span className="h-9 w-9 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-700 to-amber-900 shadow-inner" />
+                <span className="flex min-w-0 flex-col items-start">
+                  <span className="truncate text-xs font-medium">
+                    {account.displayName}
+                  </span>
+                  <span className="truncate font-mono text-[10px] text-muted-foreground">
+                    {shortenHex(account.address)} · {chain.name}
+                  </span>
+                </span>
+                <span
+                  data-toggle="account"
+                  className="ml-auto flex h-6 w-6 items-center justify-center"
+                >
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform",
+                      accountOpen && "rotate-180"
+                    )}
+                  />
+                </span>
+              </button>
+            );
+          }}
+        </ConnectButton.Custom>
       </div>
     </aside>
   );
